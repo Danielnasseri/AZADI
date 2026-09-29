@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Azadi | BTC-Backed Bridge Security Scanner</title>
+<link rel="icon" href="assets/logo.png">
+<style>
+:root{--red:#F60307;--ink:#000;--paper:#fff;--soft:#f3f3f3;--line:#d9d9d9;--f:"American Typewriter","Courier Prime","Special Elite","Courier New",Courier,monospace}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--soft);color:var(--ink);font:15px/1.6 var(--f);padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+h1,h2,h3{font-family:var(--f);font-weight:700;text-transform:uppercase;letter-spacing:-.03em;line-height:1;margin:0}
+.wrap{max-width:1040px;margin:0 auto;padding:28px 18px 60px}
+.slide{background:var(--paper);box-shadow:8px 10px 0 rgba(0,0,0,.14);margin-bottom:30px}
+.hero{display:grid;grid-template-columns:1.25fr 1fr;min-height:340px;overflow:hidden}
+.hero .l{background:var(--red);padding:38px 34px;display:flex;flex-direction:column;justify-content:space-between}
+.hero h1{font-size:clamp(54px,11vw,118px);color:var(--ink)}
+.hero p{max-width:34ch;margin:0;font-weight:700}
+.hero .r{display:flex;align-items:flex-end;justify-content:center;background:linear-gradient(var(--paper),var(--paper))}
+.hero img{max-height:340px;max-width:100%;display:block}
+.tab{display:inline-block;background:var(--red);padding:10px 22px;font-size:22px;margin:0 0 20px -34px;padding-left:34px}
+.pad{padding:34px}
+.drop{border:2px dashed var(--ink);padding:34px 18px;text-align:center;cursor:pointer;transition:background .15s}
+.drop:hover,.drop.on,.drop:focus-visible{background:var(--red);outline:none}
+.drop b{font-size:18px}.drop small{display:block;margin-top:6px}
+ul.fl{list-style:none;padding:0;margin:16px 0 0}
+ul.fl li{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding:6px 0}
+ul.fl button{all:unset;cursor:pointer;font-weight:700}ul.fl button:hover,ul.fl button:focus-visible{color:var(--red)}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:18px;margin-top:22px}
+.btn{font:700 17px var(--f);text-transform:uppercase;background:var(--ink);color:var(--paper);border:0;padding:14px 34px;cursor:pointer}
+.btn:hover,.btn:focus-visible{background:var(--red);color:var(--ink);outline:none}.btn:disabled{opacity:.4;cursor:wait}
+.btn.alt{background:var(--paper);color:var(--ink);border:2px solid var(--ink)}
+#timer{font-size:34px;font-weight:700;letter-spacing:-.04em;min-width:5.6ch}#state{flex:1;min-width:180px}
+.sum{font-size:26px;font-weight:700;letter-spacing:-.03em}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:16px;margin-top:20px}
+.card{border:2px solid var(--ink);padding:16px;background:var(--paper)}
+.card h3{font-size:18px;margin-bottom:10px}
+.card.bad{background:var(--red)}
+.face{font-size:28px;font-weight:700;margin-right:6px}
+.card ol{margin:10px 0 0;padding-left:22px}.card li{margin-bottom:8px;font-size:13.5px}
+.card li i{font-style:normal;font-weight:700}.fix{font-size:12.5px;margin-top:10px;border-top:2px solid var(--ink);padding-top:8px}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;margin-top:16px}
+.node{border:2px solid var(--ink);padding:10px 12px;font-size:12.5px;font-weight:700;flex:1;min-width:120px;text-transform:uppercase}
+.node.x{background:var(--red)}.node.x:after{content:" (broken binding)";text-transform:none;font-weight:400}
+footer{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;font-size:13px}
+a{color:var(--ink);font-weight:700;text-decoration-thickness:3px;text-decoration-color:var(--red)}a:focus-visible{outline:3px solid var(--red)}
+@media(max-width:700px){.hero{grid-template-columns:1fr}.tab{margin-left:-34px}}
+@media(prefers-color-scheme:dark){body{background:#1b1b1b}}
+</style></head><body><div class="wrap">
+<section class="slide hero"><div class="l"><h1>Azadi</h1><p>BTC-backed bridge security scanner. Checks whether a valid-looking entry can become unbacked BTC.</p></div>
+<div class="r"><img src="assets/logo.png" alt="Azadi tower"></div></section>
+
+<section class="slide pad"><h2 class="tab">Upload &amp; scan</h2>
+<div class="drop" id="drop" tabindex="0" role="button" aria-label="Choose files"><b>Drop files here or click to choose</b>
+<small>.sol · .rs · .move · .txt, several files at once. Files never leave your browser.</small></div>
+<input type="file" id="pick" multiple accept=".sol,.rs,.move,.txt" hidden>
+<ul class="fl" id="fl"></ul>
+<div class="bar"><button class="btn" id="go">Start</button><span id="timer" aria-live="off">00:00.0</span><span id="state" aria-live="polite"></span></div></section>
+
+<section class="slide pad" id="res" hidden><h2 class="tab">Results</h2>
+<div class="sum" id="sum"></div><div class="grid" id="grid"></div>
+<h2 style="margin-top:34px;font-size:22px">Attack path</h2><div class="flow" id="flow"></div>
+<div class="bar"><button class="btn alt" id="dl">Download JSON report</button></div></section>
+
+<section class="slide pad"><footer><span>Azadi is free and open source, built to strengthen blockchain network security.<br>Built by DanielNasseri.</span>
+<a href="#" id="about">AboutProject</a></footer>
+<p style="font-size:12px;margin:14px 0 0">Azadi is a heuristic first-pass scanner. A clean result is not proof of safety; findings marked Level 2 are suspicious patterns, not confirmed exploits. Always pair it with a manual audit.</p></section>
+</div>
+<script src="engine.js"></script>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let files=[],report=null;
+const fmt=ms=>{const t=Math.floor(ms/100),d=t%10,s=Math.floor(t/10)%60,m=Math.floor(t/600);return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+'.'+d};
+function list(){$('#fl').innerHTML=files.map((f,i)=>`<li><span>${esc(f.name)}</span><button data-i="${i}" aria-label="Remove ${esc(f.name)}">remove</button></li>`).join('')}
+$('#fl').onclick=e=>{const i=e.target.dataset.i;if(i!==undefined){files.splice(i,1);list()}};
+async function add(fs){for(const f of fs){if(f.size>2e6){$('#state').textContent=f.name+' is over 2 MB and was skipped.';continue}
+ files=files.filter(x=>x.name!==f.name);files.push({name:f.name,text:await f.text()})}list()}
+$('#drop').onclick=()=>$('#pick').click();
+$('#drop').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('#pick').click()}};
+$('#pick').onchange=e=>{add(e.target.files);e.target.value=''};
+['dragenter','dragover'].forEach(n=>$('#drop').addEventListener(n,e=>{e.preventDefault();$('#drop').classList.add('on')}));
+['dragleave','drop'].forEach(n=>$('#drop').addEventListener(n,e=>{e.preventDefault();$('#drop').classList.remove('on')}));
+$('#drop').addEventListener('drop',e=>add(e.dataTransfer.files));
+const FLOW=[['Legitimate entry',['ENTRY','CONFIG']],['User-controlled data',['BIND']],['Validation',['SOURCE','DOMAIN']],['Cross-chain message',['REPLAY']],['Mint / release',['BACKING','FINAL','REDEEM']],['Lending / DEX',['ORACLE']],['Real asset exit',['RATE']]];
+$('#go').onclick=async()=>{
+ if(!files.length){$('#state').textContent='Upload at least one file first.';return}
+ const b=$('#go');b.disabled=true;$('#res').hidden=true;const t0=performance.now();
+ const tk=setInterval(()=>$('#timer').textContent=fmt(performance.now()-t0),50);
+ try{report=await Azadi.scan(files.map(f=>({...f})),n=>$('#state').textContent='Checking: '+n);
+  $('#state').textContent='Done.';show(report)}
+ catch(e){$('#state').textContent='Scan failed: '+e.message}
+ clearInterval(tk);$('#timer').textContent=fmt(performance.now()-t0);b.disabled=false};
+function show(r){
+ const bad=r.checks.filter(c=>c.status==='bad').length,note=r.checks.filter(c=>c.status==='note').length;
+ $('#sum').textContent=`${r.functions} functions · ${r.checks.length} criteria · ${bad} need attention`+(note?` · ${note} notes`:'');
+ $('#grid').innerHTML=r.checks.map(c=>{
+  const face=c.status==='good'?':)':c.status==='na'?':|':c.status==='note'?':|':':(';
+  const body=c.status==='good'?`<div>Good job. ${esc(c.ok)}</div>`
+   :c.status==='na'?`<div>Nothing to check in the uploaded code.</div>`
+   :`<ol>${c.issues.map(i=>`<li><i>L${i.level}</i> ${esc(i.fn)}() ${esc(i.file)}:${i.line}<br>${esc(i.msg)}</li>`).join('')}</ol><div class="fix">Fix: ${esc(c.fix)}</div>`;
+  return `<div class="card ${c.status==='bad'?'bad':''}"><h3><span class="face">${face}</span>${esc(c.title)}</h3>${body}</div>`}).join('');
+ const broken=id=>r.checks.some(c=>c.id===id&&(c.status==='bad'));
+ $('#flow').innerHTML=FLOW.map(([n,ids])=>`<div class="node ${ids.some(broken)?'x':''}">${n}</div>`).join('');
+ $('#res').hidden=false;$('#res').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'})}
+$('#dl').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:'application/json'}));a.download='azadi-report.json';a.click()};
+$('#about').onclick=e=>{if($('#about').getAttribute('href')==='#')e.preventDefault()}; /* set href to your GitHub project page */
+</script></body></html>
